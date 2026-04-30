@@ -92,6 +92,42 @@ func TestValidatorValidate(t *testing.T) {
 			name: "valid config",
 		},
 		{
+			name: "invalid log level",
+			mutate: func(cfg *Config) {
+				cfg.Logging.Level = "trace"
+			},
+			wantErr: "invalid log level",
+		},
+		{
+			name: "invalid log format",
+			mutate: func(cfg *Config) {
+				cfg.Logging.Format = "xml"
+			},
+			wantErr: "invalid log format",
+		},
+		{
+			name: "invalid log output",
+			mutate: func(cfg *Config) {
+				cfg.Logging.Output = "stderr"
+			},
+			wantErr: "invalid log output",
+		},
+		{
+			name: "file log output requires path",
+			mutate: func(cfg *Config) {
+				cfg.Logging.Output = "file"
+				cfg.Logging.FilePath = ""
+			},
+			wantErr: "file_path is required",
+		},
+		{
+			name: "invalid server port",
+			mutate: func(cfg *Config) {
+				cfg.Server.Port = 70000
+			},
+			wantErr: "invalid port",
+		},
+		{
 			name: "duplicate enabled input path",
 			mutate: func(cfg *Config) {
 				cfg.Routes = append(cfg.Routes, validRoute("openai-to-gemini", "/v1/chat/completions"))

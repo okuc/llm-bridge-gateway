@@ -9,47 +9,15 @@ import (
 )
 
 // ProtocolConverter 协议转换器
-type ProtocolConverter struct {
-	converters map[ProtocolPair]*opentrans.Converter
-}
-
-// ProtocolPair 协议对
-type ProtocolPair struct {
-	Source opentrans.Protocol
-	Target opentrans.Protocol
-}
+type ProtocolConverter struct{}
 
 // New 创建协议转换器
 func New() *ProtocolConverter {
-	return &ProtocolConverter{
-		converters: make(map[ProtocolPair]*opentrans.Converter),
-	}
+	return &ProtocolConverter{}
 }
 
-// Init 初始化转换器，注册所有协议对
-func (pc *ProtocolConverter) Init() {
-	protocols := []opentrans.Protocol{
-		opentrans.ProtocolOpenAI,
-		opentrans.ProtocolClaude,
-		opentrans.ProtocolResponses,
-		opentrans.ProtocolGemini,
-	}
-
-	// 注册所有协议对的转换器
-	for _, source := range protocols {
-		for _, target := range protocols {
-			if source != target {
-				pc.RegisterConverter(source, target)
-			}
-		}
-	}
-}
-
-// RegisterConverter 注册转换器
-func (pc *ProtocolConverter) RegisterConverter(source, target opentrans.Protocol) {
-	key := ProtocolPair{Source: source, Target: target}
-	pc.converters[key] = opentrans.MustNewConverter(source, target)
-}
+// Init 初始化转换器
+func (pc *ProtocolConverter) Init() {}
 
 // ConvertRequest 转换请求体
 // 支持双向转换：上行（客户端→目标API）和下行（目标API→客户端）
@@ -114,10 +82,13 @@ func GetProtocol(protocol string) (opentrans.Protocol, error) {
 // IsStreamRequest 检查是否是流式请求
 func IsStreamRequest(body []byte) bool {
 	var request struct {
-		Stream bool `json:"stream"`
+		Stream           bool `json:"stream"`
+		GenerationConfig struct {
+			Stream bool `json:"stream"`
+		} `json:"generationConfig"`
 	}
 	if err := json.Unmarshal(body, &request); err != nil {
 		return false
 	}
-	return request.Stream
+	return request.Stream || request.GenerationConfig.Stream
 }

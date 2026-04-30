@@ -11,34 +11,11 @@ func TestNew(t *testing.T) {
 	if c == nil {
 		t.Fatal("New() returned nil")
 	}
-
-	if c.converters == nil {
-		t.Fatal("converters map is nil")
-	}
 }
 
 func TestInit(t *testing.T) {
 	c := New()
 	c.Init()
-
-	// 验证所有协议对都已注册
-	protocols := []opentrans.Protocol{
-		opentrans.ProtocolOpenAI,
-		opentrans.ProtocolClaude,
-		opentrans.ProtocolResponses,
-		opentrans.ProtocolGemini,
-	}
-
-	for _, source := range protocols {
-		for _, target := range protocols {
-			if source != target {
-				key := ProtocolPair{Source: source, Target: target}
-				if _, exists := c.converters[key]; !exists {
-					t.Errorf("Converter not registered for %s -> %s", source, target)
-				}
-			}
-		}
-	}
 }
 
 func TestGetProtocol(t *testing.T) {
@@ -129,6 +106,16 @@ func TestIsStreamRequest(t *testing.T) {
 			expected: false,
 		},
 		{
+			name:     "gemini generation config stream true",
+			body:     `{"contents":[{"parts":[{"text":"hello"}]}],"generationConfig":{"stream":true}}`,
+			expected: true,
+		},
+		{
+			name:     "gemini generation config stream false",
+			body:     `{"contents":[{"parts":[{"text":"hello"}]}],"generationConfig":{"stream":false}}`,
+			expected: false,
+		},
+		{
 			name:     "no stream field",
 			body:     `{"model": "gpt-4"}`,
 			expected: false,
@@ -137,6 +124,11 @@ func TestIsStreamRequest(t *testing.T) {
 			name:     "stream true no space",
 			body:     `{"model":"gpt-4","stream":true}`,
 			expected: true,
+		},
+		{
+			name:     "invalid json",
+			body:     `{`,
+			expected: false,
 		},
 	}
 

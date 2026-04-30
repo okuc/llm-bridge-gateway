@@ -3,6 +3,7 @@ package proxy
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 
@@ -26,6 +27,25 @@ func NewStreamHandler(converter *converter.ProtocolConverter) *StreamHandler {
 
 // HandleStream 处理流式响应
 func (sh *StreamHandler) HandleStream(c *gin.Context, resp *http.Response, source, target opentrans.Protocol) {
+	if resp.StatusCode >= 400 {
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			c.JSON(http.StatusBadGateway, gin.H{
+				"error": gin.H{
+					"code":    "UPSTREAM_ERROR",
+					"message": "Failed to read upstream error response",
+				},
+			})
+			return
+		}
+		contentType := resp.Header.Get("Content-Type")
+		if contentType == "" {
+			contentType = "application/json"
+		}
+		c.Data(resp.StatusCode, contentType, body)
+		return
+	}
+
 	// 设置SSE响应头
 	c.Header("Content-Type", "text/event-stream")
 	c.Header("Cache-Control", "no-cache")
