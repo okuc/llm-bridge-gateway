@@ -1,0 +1,42 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+/gateway
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Config (keep example)
+config/config.yaml
+config/*.env
+
+# Logs
+logs/
+*.log
+
+# Vendor
+vendor/
+
+# Build
+dist/
+build/
+
+# Claude Code
+.claude/
+CLAUDE.md

@@ -1,0 +1,189 @@
+# LLM Bridge Gateway 配置文件
+
+# 服务器配置
+server:
+  host: "0.0.0.0"
+  port: 18168
+  read_timeout: 30s
+  write_timeout: 60s
+  idle_timeout: 120s
+
+# 日志配置
+logging:
+  level: "info"  # debug, info, warn, error
+  format: "json" # json, text
+  output: "stdout" # stdout, file
+  file_path: "./logs/gateway.log"
+
+# 路由配置
+# 当前版本按 input.path 精确匹配路由；所有 enabled 路由的 input.path 必须唯一。
+routes:
+  # OpenAI -> Claude 转换
+  - name: "openai-to-claude"
+    enabled: true
+    input:
+      protocol: "openai"
+      path: "/v1/chat/completions"
+    output:
+      protocol: "claude"
+      base_url: "https://api.anthropic.com/v1/messages"
+      api_key: "${ANTHROPIC_API_KEY}"
+      model: "claude-sonnet-4-20250514"
+      max_tokens: 4096
+    timeout: 60s
+    retry:
+      max_attempts: 3
+      backoff: 1s
+
+  # Claude -> OpenAI 转换
+  - name: "claude-to-openai"
+    enabled: true
+    input:
+      protocol: "claude"
+      path: "/v1/messages"
+    output:
+      protocol: "openai"
+      base_url: "https://api.openai.com/v1/chat/completions"
+      api_key: "${OPENAI_API_KEY}"
+      model: "gpt-4o"
+    timeout: 60s
+
+  # OpenAI -> Responses 转换
+  - name: "openai-to-responses"
+    enabled: true
+    input:
+      protocol: "openai"
+      path: "/v1/openai/responses"
+    output:
+      protocol: "responses"
+      base_url: "https://api.openai.com/v1/responses"
+      api_key: "${OPENAI_API_KEY}"
+      model: "gpt-4o"
+    timeout: 60s
+
+  # Responses -> OpenAI 转换
+  - name: "responses-to-openai"
+    enabled: true
+    input:
+      protocol: "responses"
+      path: "/v1/responses"
+    output:
+      protocol: "openai"
+      base_url: "https://api.openai.com/v1/chat/completions"
+      api_key: "${OPENAI_API_KEY}"
+      model: "gpt-4o"
+    timeout: 60s
+
+  # Claude -> Responses 转换
+  - name: "claude-to-responses"
+    enabled: true
+    input:
+      protocol: "claude"
+      path: "/v1/claude/responses"
+    output:
+      protocol: "responses"
+      base_url: "https://api.openai.com/v1/responses"
+      api_key: "${OPENAI_API_KEY}"
+      model: "gpt-4o"
+    timeout: 60s
+
+  # Responses -> Claude 转换
+  - name: "responses-to-claude"
+    enabled: true
+    input:
+      protocol: "responses"
+      path: "/v1/responses/claude"
+    output:
+      protocol: "claude"
+      base_url: "https://api.anthropic.com/v1/messages"
+      api_key: "${ANTHROPIC_API_KEY}"
+      model: "claude-sonnet-4-20250514"
+    timeout: 60s
+
+  # OpenAI -> Gemini 转换
+  - name: "openai-to-gemini"
+    enabled: true
+    input:
+      protocol: "openai"
+      path: "/v1/openai/gemini"
+    output:
+      protocol: "gemini"
+      base_url: "https://generativelanguage.googleapis.com/v1beta/models"
+      api_key: "${GEMINI_API_KEY}"
+      model: "gemini-2.0-flash"
+    timeout: 60s
+
+  # Gemini -> OpenAI 转换
+  - name: "gemini-to-openai"
+    enabled: true
+    input:
+      protocol: "gemini"
+      path: "/v1/gemini/openai"
+    output:
+      protocol: "openai"
+      base_url: "https://api.openai.com/v1/chat/completions"
+      api_key: "${OPENAI_API_KEY}"
+      model: "gpt-4o"
+    timeout: 60s
+
+  # Claude -> Gemini 转换
+  - name: "claude-to-gemini"
+    enabled: true
+    input:
+      protocol: "claude"
+      path: "/v1/claude/gemini"
+    output:
+      protocol: "gemini"
+      base_url: "https://generativelanguage.googleapis.com/v1beta/models"
+      api_key: "${GEMINI_API_KEY}"
+      model: "gemini-2.0-flash"
+    timeout: 60s
+
+  # Gemini -> Claude 转换
+  - name: "gemini-to-claude"
+    enabled: true
+    input:
+      protocol: "gemini"
+      path: "/v1/gemini/claude"
+    output:
+      protocol: "claude"
+      base_url: "https://api.anthropic.com/v1/messages"
+      api_key: "${ANTHROPIC_API_KEY}"
+      model: "claude-sonnet-4-20250514"
+    timeout: 60s
+
+  # Responses -> Gemini 转换
+  - name: "responses-to-gemini"
+    enabled: true
+    input:
+      protocol: "responses"
+      path: "/v1/responses/gemini"
+    output:
+      protocol: "gemini"
+      base_url: "https://generativelanguage.googleapis.com/v1beta/models"
+      api_key: "${GEMINI_API_KEY}"
+      model: "gemini-2.0-flash"
+    timeout: 60s
+
+  # Gemini -> Responses 转换
+  - name: "gemini-to-responses"
+    enabled: true
+    input:
+      protocol: "gemini"
+      path: "/v1/gemini/responses"
+    output:
+      protocol: "responses"
+      base_url: "https://api.openai.com/v1/responses"
+      api_key: "${OPENAI_API_KEY}"
+      model: "gpt-4o"
+    timeout: 60s
+
+# 健康检查
+health:
+  enabled: true
+  path: "/health"
+
+# 指标配置预留；当前版本尚未注册 /metrics 处理器。
+metrics:
+  enabled: false
+  path: "/metrics"

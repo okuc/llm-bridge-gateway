@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  gateway:
+    build: .
+    ports:
+      - "18168:18168"
+    volumes:
+      - ./config:/app/config
+      - ./logs:/app/logs
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:18168/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
